@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rēķinpratības novērtēšana – Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;background:#f5f1eb;color:#1a1814}
+#app{max-width:860px;margin:0 auto;padding:1.25rem}
+
+/* ── CARDS & LAYOUT ── */
+.card{background:#fff;border:1px solid #d9d3c8;border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:11px}
+.card.gray{background:#eee9e2}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+@media(max-width:600px){.cols{grid-template-columns:1fr}}
+
+/* ── TYPOGRAPHY ── */
+h1{font-size:22px;font-weight:600;color:#1b5454;margin-bottom:4px}
+h2{font-size:17px;font-weight:500;margin-bottom:10px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9a9186;margin-bottom:3px}
+.lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9a9186;display:block;margin-bottom:8px}
+.sub{font-size:14px;color:#5a5448;margin-bottom:1rem}
+.err{font-size:12px;color:#b71c1c;margin-top:5px;display:none}
+.warn{font-size:12px;color:#7b4b00;background:#fff8e1;border:1px solid #ffb300;border-radius:5px;padding:6px 10px;margin-bottom:10px}
+
+/* ── FORM ELEMENTS ── */
+input[type=text]{width:100%;padding:9px 11px;border:1px solid #d9d3c8;border-radius:6px;font-family:inherit;font-size:14px;background:#f5f1eb;color:#1a1814;outline:none}
+input[type=text]:focus{border-color:#1b5454}
+textarea{width:100%;padding:8px 10px;border:1px solid #d9d3c8;border-radius:6px;font-family:inherit;font-size:13px;background:#f5f1eb;color:#1a1814;resize:vertical;outline:none;margin-top:5px}
+textarea:focus{border-color:#1b5454}
+
+/* ── BUTTONS ── */
+button{font-family:inherit;cursor:pointer;font-size:14px;border-radius:6px;border:1px solid #d9d3c8;padding:8px 14px;background:#fff;color:#5a5448;transition:all .12s}
+button:hover{background:#eee9e2}
+button:disabled{opacity:.3;cursor:not-allowed}
+.btn-main{display:block;width:100%;padding:11px;background:#1b5454;color:#fff;border:none;font-weight:500;margin-top:12px;font-size:15px;border-radius:6px;cursor:pointer}
+.btn-main:hover{background:#1f6666}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-teal{background:#1b5454;color:#fff;border-color:#1b5454}
+.btn-teal:hover{background:#1f6666}
+.btn-sm.sg{background:#e8f5e9;color:#1b5e20;border:1.5px solid #81c784;font-weight:600}
+.btn-sm.sr{background:#ffebee;color:#8b1a1a;border:1.5px solid #ef9a9a}
+
+/* ── PROGRESS DOTS ── */
+.dots{display:flex;gap:5px;align-items:center;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.dot{height:7px;border-radius:4px;transition:all .2s;background:#d9d3c8}
+.dot.done{background:#4caf50;width:8px}
+.dot.cur{background:#1b5454;width:20px}
+.dot.pend{width:8px}
+
+/* ── WELCOME TASK LIST ── */
+.tlist{border:1px solid #d9d3c8;border-radius:10px;overflow:hidden;margin-top:1.25rem}
+.tlist-hd{padding:8px 13px;background:#eee9e2;border-bottom:1px solid #d9d3c8;font-size:12px;font-weight:600;color:#5a5448}
+.trow{display:flex;gap:10px;padding:8px 13px;border-bottom:1px solid #d9d3c8;align-items:center}
+.trow:last-child{border-bottom:none}
+.tc{font-size:11px;color:#9a9186;min-width:22px}
+.tn{font-size:13px;color:#5a5448;flex:1}
+.tr-val{font-size:11px;color:#9a9186}
+.tn-wrap{flex:1;position:relative;display:flex;align-items:center;gap:5px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1b5454;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;border:none;padding:0;line-height:1;user-select:none;box-shadow:0 1px 4px rgba(27,84,84,.25)}
+.info-btn:hover{background:#134040;box-shadow:0 2px 8px rgba(27,84,84,.35)}
+.info-btn::after{content:"Spiedi, lai uzzinātu vairāk";display:none}
+.tooltip-box{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:100;background:#1b5454;color:#fff;font-size:12px;line-height:1.5;padding:10px 13px;border-radius:8px;width:320px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.tooltip-box.active{display:block}
+.tooltip-box::before{content:"";position:absolute;top:-5px;left:14px;width:10px;height:10px;background:#1b5454;transform:rotate(45deg);border-radius:1px}
+
+/* ── INSTRUCTION LIST ── */
+.irow{display:flex;gap:8px;margin-bottom:7px}
+.inum{font-size:11px;color:#9a9186;min-width:17px;padding-top:2px}
+.itxt{font-size:13px;line-height:1.55}
+
+/* ── SHARED ITEM ROW ── */
+.item-row{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #d9d3c8;border-radius:7px;margin-bottom:6px;flex-wrap:nowrap}
+.score-inline{font-size:14px;font-weight:500;color:#1b5454;margin-top:8px;display:block}
+
+/* ── SCORING PANEL ── */
+.sbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.sbtn{padding:9px 5px;border-radius:6px;border:1px solid #d9d3c8;background:#fff;color:#5a5448;font-family:inherit;font-size:13px;cursor:pointer;transition:all .12s;line-height:1.3}
+.sbtn:hover{border-color:#c4bdb0}
+.sbtn.sg{background:#e8f5e9;color:#1b5e20;border:1.5px solid #81c784;font-weight:600}
+.sbtn.sa{background:#fff8e1;color:#7b4b00;border:1.5px solid #ffb300;font-weight:600}
+.sbtn.sr{background:#ffebee;color:#8b1a1a;border:1.5px solid #ef9a9a;font-weight:600}
+.rrow{display:flex;gap:8px;margin-bottom:4px}
+.rrow.dim{opacity:.55}
+.rlbl{font-size:12px;font-weight:500;min-width:120px;flex-shrink:0}
+.rtxt{font-size:12px;color:#5a5448;line-height:1.4}
+.auto-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid;margin-bottom:8px}
+
+/* ── DIGIT GRID (uzd. 3) ── */
+.digit-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.dbtn{width:54px;height:58px;border-radius:7px;border:1.5px solid #d9d3c8;background:#f5f1eb;font-size:24px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.dbtn:hover{border-color:#c4bdb0}
+.dbtn.correct{background:#e8f5e9;border-color:#81c784;color:#1b5e20}
+
+/* ── SUBITIZING (uzd. 1) ── */
+.dot-card{width:140px;height:140px;border:1.5px solid #d9d3c8;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center}
+.dot-card.showing{border-color:#1b5454;background:#f0f7f7}
+
+/* ── COUNT BLOCK GRID (uzd. 2) ── */
+.cblocks{display:flex;flex-wrap:wrap;max-width:145px}
+.cblock{width:21px;height:21px;background:#1b5454;border-radius:3px;margin:2px}
+
+/* ── ARITHMETIC (uzd. 4) ── */
+.arith-item{border:1px solid #d9d3c8;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.arith-top{padding:9px 13px;background:#eee9e2;display:flex;gap:10px;align-items:flex-start}
+.arith-q{font-size:14px;flex:1;line-height:1.45}
+.arith-ans-tag{font-size:13px;color:#1b5454;font-weight:600;white-space:nowrap;padding-top:1px;flex-shrink:0}
+.arith-vis{padding:6px 13px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:28px}
+.adot{width:14px;height:14px;border-radius:50%;display:inline-block;margin:1px}
+.arith-btns{padding:5px 12px 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ── PATTERNS (uzd. 5) ── */
+.pat-item{border:1px solid #d9d3c8;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.pat-top{padding:9px 13px;background:#eee9e2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pat-seq{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.pblock{width:30px;height:30px;border-radius:5px;border:1.5px solid rgba(0,0,0,.12);flex-shrink:0}
+.pqmark{width:30px;height:30px;border-radius:5px;border:2px dashed #9a9186;display:flex;align-items:center;justify-content:center;font-size:15px;color:#9a9186;flex-shrink:0;font-weight:600}
+.pat-btns{padding:7px 13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ── SPATIAL (uzd. 6) ── */
+.sp-item{border:1px solid #d9d3c8;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.sp-top{padding:9px 13px;background:#eee9e2}
+.sp-q{font-size:14px;line-height:1.5}
+.sp-vis{display:flex;align-items:center;justify-content:center;padding:10px 13px}
+.sp-ans{font-size:12px;color:#5a5448;padding:0 13px 5px;font-style:italic}
+.sp-btns{padding:5px 12px 8px;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── NAV ── */
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+
+/* ── SUMMARY ── */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:#eee9e2;border-radius:8px;padding:12px 15px}
+.stat-l{font-size:12px;color:#5a5448;margin-bottom:3px}
+.stat-v{font-size:24px;font-weight:500}
+.rtable{background:#fff;border:1px solid #d9d3c8;border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+.rresult{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:9px 14px;border-bottom:1px solid #d9d3c8;align-items:start}
+.rresult:last-child{border-bottom:none}
+.rnum{font-size:11px;color:#9a9186;padding-top:2px}
+.rname{font-size:13px;font-weight:500;margin-bottom:2px}
+.badge{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;border:1px solid;white-space:nowrap}
+.bg{background:#e8f5e9;color:#1b5e20;border-color:#81c784}
+.ba{background:#fff8e1;color:#7b4b00;border-color:#ffb300}
+.br{background:#ffebee;color:#8b1a1a;border-color:#ef9a9a}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+
+// ══ FIXED DATA ═════════════════════════════════════════════════════════
+var SUBIT_ORDER = [3, 1, 5, 2, 6, 4]; // scrambled, ne secīgi
+
+var DOT_POS = {
+  1: [[50,50]],
+  2: [[28,50],[72,50]],
+  3: [[28,28],[72,28],[50,72]],
+  4: [[25,25],[75,25],[25,75],[75,75]],
+  5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+  6: [[22,25],[50,25],[78,25],[22,75],[50,75],[78,75]]
+};
+
+var PHEX = {R:'#e53935', B:'#1565c0', G:'#2e7d32', Y:'#f9a825'};
+var PLV  = {R:'sarkans', B:'zils',    G:'zaļš',   Y:'dzeltens'};
+
+// ══ TASK DEFINITIONS ═══════════════════════════════════════════════════
+var TASKS = [
+  {
+    n:1, dq:'Kas ir subitizācija?', desc:'Spēja uzreiz atpazīt nelielas priekšmetu grupas daudzumu, tās neskaitot pa vienam. Nosaukums cēlies no latīņu vārda subitus (pēkšņs). Šī prasme ir skaitļu izjūtas pamats un parasti attiecas uz grupām līdz četriem vai pieciem elementiem.', title:'Skaitļu izjūta: subitizācija', dom:'Skaitļu izjūta', r:'r = .63',
+    src:'Jordan et al. (2009)', type:'subitizing',
+    instr:[
+      'Sakiet: "Tagad parādīšu uz īsu brīdi punktus uz ekrāna. Skaties uzmanīgi un pēc tam pasaki, cik punktu redzēji. Nemēģini skaitīt pa vienam!"',
+      'Spiediet "Rādīt" pie katra uzdevuma. Punkti parādās uz 2 sekundēm, tad automātiski pazūd.',
+      'Novērojiet: vai bērns atbild uzreiz (subitizē) vai klusē un skaita (skaitīšanas stratēģija)? Atzīmējiet pareizi / nepareizi.'
+    ],
+    rub:{
+      a:'Pareizi nosauc 5 līdz 6 kārtas; atbilde lielākoties ātra, tūlītēja, bez redzamas \"pa vienam\" skaitīšanas',
+      p:'Pareizi nosauc 3 līdz 4 kārtas vai lielākām grupām (4 līdz 6), konsekventi lieto skaitīšanas stratēģiju',
+      n:'Pareizi nosauc ≤2 kārtas; skaita katru punktu pa vienam arī mazās grupās (1 līdz 3)'
+    }
+  },
+  {
+    n:2, dq:'Kas ir kopskaita princips?', desc:'Spēja secīgi skaitīt priekšmetus, saistot katru skaitļa vārdu ar vienu elementu (viens pret vienu atbilstība), un saprast, ka pēdējais nosauktais skaitlis izsaka kopējo daudzumu. Šis princips ir pamats tālākai skaitļu izpratnei.', title:'Skaitīšana un kopskaita princips', dom:'Skaitļu izpratne', r:'β = .52',
+    src:'Aunola et al. (2004)', type:'counting',
+    instr:[
+      'Sakiet: "Saskaiti visus punktiņus, ko redzi!"',
+      'Parādiet katru kopu secīgi. Pēc skaitīšanas pajautājiet: "Cik punktiņu ir kopā?", atzīmējiet, vai bērns atkārto pēdējo skaitli vai skaita no jauna.',
+      'Novērojiet: vai bērns ievēro \"viens pret vienu\" atbilstību? Vai neskaita to pašu elementu divas reizes?'
+    ],
+    sets:[3, 5, 7, 10, 12],
+    rub:{
+      a:'Pareizi skaita 4 līdz 5 kopas; pēc skaitīšanas pareizi nosauc kopskaitu (kopskaita princips)',
+      p:'Pareizi skaita 2 līdz 3 kopas; pieļauj \"viens pret vienu\" kļūdas lielākās kopās vai kopskaita princips nestabils',
+      n:'Pareizi skaita ≤1 kopu; konsekventi kļūdās atbilstībā vai neizprot kopskaita principu'
+    }
+  },
+  {
+    n:3, dq:'Kas ir ciparu atpazīšana?', desc:'Spēja atpazīt un nosaukt ciparu simbolus (1–10). Simbola un daudzuma saiknes apguve ir svarīgs solis ceļā uz formālo aritmētiku un matemātiskās lasītprasmes veidošanos.', title:'Ciparu atpazīšana', dom:'Ciparu simboli', r:'r = .49',
+    src:'Jiménez Lira et al. (2017)', type:'digit_id',
+    instr:[
+      'Parādiet ciparu tabulu bērnam uz ekrāna.',
+      'Sakiet: "Nosauc katru ciparu, ko redzi!"',
+      'Norādiet uz cipariem ekrānā (parādīti jauktā secībā). Klikšķiniet uz katra cipara, ko bērns nosauc pareizi.'
+    ],
+    digits:['3','7','1','9','4','10','2','6','8','5'],
+    rub:{
+      a:'Nosauc 8 līdz 10 ciparus pareizi',
+      p:'Nosauc 5 līdz 7 ciparus pareizi',
+      n:'Nosauc ≤4 ciparus pareizi'
+    }
+  },
+  {
+    n:4, dq:'Kas ir neformālā aritmētika?', desc:'Spēja risināt vienkāršus saskaitīšanas un atņemšanas uzdevumus ikdienas situāciju kontekstā, izmantojot skaitīšanu, pirkstus vai prāta stratēģijas — pirms formālas matemātikas apguves skolā.', title:'Neformālā aritmētika', dom:'Darbības ar skaitļiem', r:'β = .34',
+    src:'Jordan et al. (2009)', type:'arithmetic',
+    instr:[
+      'Izlasiet katru uzdevumu skaļi un skaidri. Var izmantot arī reālus priekšmetus, attiecīgi pielāgojot instrukcijas.',
+      'Ļaujiet bērnam atbildēt mutiski vai ar pirkstiem; nekoriģējiet nepareizas atbildes.',
+      'Atzīmējiet "Pareizi" vai "Nepareizi" pēc katra uzdevuma.'
+    ],
+    problems:[
+      {q:'Tev ir 3 āboli. Es dodu tev vēl 1 ābolu. Cik ābolu tev tagad ir?',              ans:4, vis:'3+1'},
+      {q:'Uz šķīvja ir 5 cepumi. Tu apēd 2. Cik cepumu paliek?',                          ans:3, vis:'5-2'},
+      {q:'Vienā kastītē ir 4 lācīši, otrā kastītē ir 3 lācīši. Cik lācīšu kopā?',       ans:7, vis:'4+3'},
+      {q:'Janai ir 6 bumbiņas. Viņa 2 bumbiņas iedod draugam. Cik bumbiņu paliek Janai?',  ans:4, vis:'6-2'},
+      {q:'Uz galda ir 9 zīmuļi. 4 ir sarkani, pārējie ir zili. Cik ir zilo zīmuļu?',     ans:5, vis:'9-4'}
+    ],
+    rub:{
+      a:'Pareizi atrisina 4 līdz 5 uzdevumus; lieto efektīvas stratēģijas (skaitīšana no lielākā u.c.)',
+      p:'Pareizi atrisina 2 līdz 3 uzdevumus; tiek galā ar saskaitīšanu, bet grūtības ar atņemšanu vai lielākiem skaitļiem',
+      n:'Pareizi atrisina ≤1 uzdevumu; galvenokārt uzmin vai neatbild'
+    }
+  },
+  {
+    n:5, dq:'Kas ir likumsakarību atpazīšana?', desc:'Spēja pamanīt, turpināt un aprakstīt atkārtojošās secības (piemēram, ABAB, AABB). Likumsakarību izpratne ir algebriskās domāšanas pamats un cieši saistīta ar matemātisko spriestspēju vēlākos mācību gados.', title:'Likumsakarību atpazīšana', dom:'Algebriskā domāšana', r:'r = .40',
+    src:'Papic et al. (2011)', type:'patterns',
+    instr:[
+      'Sakiet: "Paskatīsimies uz šīm krāsainajām figūrām! Vai redzi kādu noteikumu, kā sakārtotas krāsas? Kāda krāsa nāks tālāk?"',
+      'Bērns var norādīt uz ekrānu vai nosaukt pareizo krāsu. Atzīmējiet, vai bērns turpina secību pareizi.',
+      'Papildjautājums pareizas atbildes gadījumā: "Vai vari pastāstīt, kāds ir šī raksta noteikums?" Atzīmējiet, vai var formulēt.'
+    ],
+    patterns:[
+      {seq:['R','B','R','B','R'],     ans:'B', type:'ABAB'},
+      {seq:['R','R','B','B','R','R'], ans:'B', type:'AABB'},
+      {seq:['R','B','G','R','B'],     ans:'G', type:'ABC'},
+      {seq:['R','R','B','R','R'],     ans:'B', type:'AABA'}
+    ],
+    rub:{
+      a:'Turpina 3 līdz 4 secības pareizi; var nosaukt vai parādīt likumsakarību vārdiski',
+      p:'Turpina 2 secības pareizi vai turpina pareizi, bet nevar izskaidrot noteikumu',
+      n:'Turpina ≤1 secību pareizi; izvēlas nejauši vai neiesaistās uzdevumā'
+    }
+  },
+  {
+    n:6, dq:'Kas ir telpiskā domāšana?', desc:'Spēja orientēties telpā, atpazīt ģeometriskas figūras un izprast telpiskās attiecības (virs, zem, blakus). Telpiskā domāšana cieši korelē ar matemātiskajiem sasniegumiem skolas gados.', title:'Telpiskā domāšana', dom:'Ģeometrija un telpa', r:'β = .25',
+    src:'Mix et al. (2016)', type:'spatial',
+    instr:[
+      'Katram uzdevumam uz ekrāna redzams attēls. Uzdodiet jautājumu un ļaujiet bērnam norādīt vai atbildēt mutiski.',
+      '2. uzdevumam nepieciešams neliels priekšmets (pildspalva vai rotaļlieta) un grāmata.',
+      'Atzīmējiet "Pareizi", ja bērns pareizi atbild uz visu uzdevuma daļu.'
+    ],
+    items:[
+      {q:'Kurš no šiem apļiem ir lielāks? Norādi uz to!',                              vis:'size',     ans:'Lielākais aplis (kreisajā pusē)'},
+      {q:'Noliec priekšmetu UZ grāmatas. Tagad ZEM grāmatas. Tagad BLAKUS grāmatai.',        vis:'none',     ans:'Bērns pareizi izpilda visas 3 darbības'},
+      {q:'Kā sauc šo figūru?',                                                         vis:'triangle', ans:'Trijstūris'},
+      {q:'Cik stūru ir šai figūrai? Rādi ar pirkstu!',                                vis:'square',   ans:'4 stūri (atzīmēti ar punktiem)'},
+      {q:'Vai šīs divas figūras ir vienādas pēc formas? (Otrā ir pagriezta.)',         vis:'rotation', ans:'Jā, vienādas pēc formas'}
+    ],
+    rub:{
+      a:'Pareizi atbild uz 4 līdz 5 uzdevumiem; lieto telpiskos terminus (virs, zem, blakus) pareizi',
+      p:'Pareizi atbild uz 2 līdz 3 uzdevumiem; telpiskajā vārdu krājumā vai formu atpazīšanā nepilnības',
+      n:'Pareizi atbild uz ≤1 uzdevumu; ievērojamas grūtības gan ar formu, gan telpisko orientāciju'
+    }
+  }
+];
+
+// ══ STATE ══════════════════════════════════════════════════════════════
+var S = {phase:'welcome', code:'', idx:0, results:[], saved:false};
+var subitTimer = null;
+
+function initResults() {
+  return TASKS.map(function(t) {
+    if (t.type==='subitizing') return {items:Array(SUBIT_ORDER.length).fill(null), showing:-1, rubric:null, note:''};
+    if (t.type==='counting')   return {items:Array(t.sets.length).fill(null), rubric:null, note:''};
+    if (t.type==='digit_id')   return {items:Array(t.digits.length).fill(null), rubric:null, note:''};
+    if (t.type==='arithmetic') return {items:Array(t.problems.length).fill(null), rubric:null, note:''};
+    if (t.type==='patterns')   return {items:Array(t.patterns.length).fill(null), rubric:null, note:''};
+    if (t.type==='spatial')    return {items:Array(t.items.length).fill(null), rubric:null, note:''};
+    return {rubric:null, note:''};
+  });
+}
+
+// ══ HELPERS ════════════════════════════════════════════════════════════
+function g(id){ return document.getElementById(id); }
+function cc(arr){ return arr.filter(function(v){return v===true;}).length; }
+
+function autoScore(idx) {
+  var t=TASKS[idx], n=cc(S.results[idx].items);
+  if (t.type==='subitizing')  return n>=5?2:n>=3?1:0;
+  if (t.type==='counting')    return n>=4?2:n>=2?1:0;
+  if (t.type==='digit_id')    return n>=8?2:n>=5?1:0;
+  if (t.type==='arithmetic')  return n>=4?2:n>=2?1:0;
+  if (t.type==='patterns')    return n>=3?2:n>=2?1:0;
+  if (t.type==='spatial')     return n>=4?2:n>=2?1:0;
+  return null;
+}
+
+function getEffectiveRubric(idx) {
+  var r=S.results[idx];
+  if (r.rubric!==null) return r.rubric;
+  return autoScore(idx);
+}
+
+function isComplete(idx) {
+  var t=TASKS[idx], r=S.results[idx];
+  if (r.rubric!==null) return true;
+  if (t.type==='digit_id' || t.type==='spatial') return true;
+  return r.items.every(function(v){return v!==null;});
+}
+
+// ══ SVG / VISUAL GENERATORS ════════════════════════════════════════════
+function subitSVG(n) {
+  var pts=DOT_POS[n]||[];
+  return '<svg width="110" height="110" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display:block">'+
+    pts.map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="10" fill="#1b5454"/>';}).join('')+
+    '</svg>';
+}
+
+function countBlockGrid(n) {
+  var b='';
+  for(var i=0;i<n;i++) b+='<div class="cblock"></div>';
+  return '<div class="cblocks">'+b+'</div>';
+}
+
+function dotsVis(spec) {
+  var m=spec.match(/^(\d+)([+\-])(\d+)$/);
+  if(!m) return '';
+  var a=parseInt(m[1]),op=m[2],b=parseInt(m[3]);
+  function row(n,c){var s='';for(var i=0;i<n;i++)s+='<span class="adot" style="background:'+c+'"></span>';return s;}
+  var sym=op==='+'?'+':'\u2212';
+  return row(a,'#1b5454')+
+    '<span style="font-size:16px;color:#5a5448;margin:0 4px">'+sym+'</span>'+
+    row(b, op==='+'?'#43a047':'#e57373');
+}
+
+function pb(c) {
+  if(c==='?') return '<div class="pqmark">?</div>';
+  return '<div class="pblock" style="background:'+PHEX[c]+'"></div>';
+}
+
+function spatialSVG(type) {
+  if(type==='size')
+    return '<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">'+
+      '<circle cx="55" cy="40" r="32" fill="none" stroke="#1b5454" stroke-width="2.5"/>'+
+      '<circle cx="145" cy="40" r="16" fill="none" stroke="#1b5454" stroke-width="2.5"/>'+
+      '</svg>';
+  if(type==='triangle')
+    return '<svg width="100" height="92" viewBox="0 0 100 92" xmlns="http://www.w3.org/2000/svg">'+
+      '<polygon points="50,8 92,84 8,84" fill="#e4efef" stroke="#1b5454" stroke-width="2.5"/>'+
+      '</svg>';
+  if(type==='square')
+    return '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+      '<rect x="10" y="10" width="80" height="80" fill="#e4efef" stroke="#1b5454" stroke-width="2.5"/>'+
+      '<circle cx="10" cy="10" r="5" fill="#e53935"/>'+
+      '<circle cx="90" cy="10" r="5" fill="#e53935"/>'+
+      '<circle cx="10" cy="90" r="5" fill="#e53935"/>'+
+      '<circle cx="90" cy="90" r="5" fill="#e53935"/>'+
+      '</svg>';
+  if(type==='rotation')
+    return '<svg width="240" height="90" viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg">'+
+      '<rect x="10" y="8"  width="22" height="66" fill="#e4efef" stroke="#1b5454" stroke-width="2"/>'+
+      '<rect x="10" y="52" width="60" height="22" fill="#e4efef" stroke="#1b5454" stroke-width="2"/>'+
+      '<text x="41" y="86" font-size="11" fill="#9a9186" text-anchor="middle">A</text>'+
+      '<rect x="130" y="8"  width="80" height="22" fill="#e4efef" stroke="#1b5454" stroke-width="2"/>'+
+      '<rect x="188" y="8"  width="22" height="66" fill="#e4efef" stroke="#1b5454" stroke-width="2"/>'+
+      '<text x="170" y="86" font-size="11" fill="#9a9186" text-anchor="middle">B</text>'+
+      '<text x="110" y="48" font-size="14" fill="#c4bdb0" text-anchor="middle">&#8596;</text>'+
+      '</svg>';
+  return '';
+}
+
+// ══ MARK BUTTONS (shared helper) ═══════════════════════════════════════
+function mbtns(i, v) {
+  if(v===true)  return '<button class="btn-sm sg" onclick="setItem('+i+',null)">\u2713 Pareizi</button>';
+  if(v===false) return '<button class="btn-sm sr" onclick="setItem('+i+',true)">\u2717 Nepareizi</button>';
+  return '<button class="btn-sm" onclick="setItem('+i+',true)">Pareizi</button>&nbsp;<button class="btn-sm" onclick="setItem('+i+',false)">Nepareizi</button>';
+}
+
+// ══ BUILD TASK CONTENT ════════════════════════════════════════════════
+
+function buildSubitizing(t, r) {
+  var html='<span class="lbl">Subitizācijas uzdevumi</span>'+
+    '<div class="warn">Spiediet "Rādīt" pie katra uzdevuma. Punkti redzami uz 2 sekundēm, tad automātiski pazūd. Bērns nosauc skaitu.</div>';
+  if(r.showing>=0) {
+    html+='<div style="display:flex;justify-content:center;margin-bottom:14px">'+
+      '<div class="dot-card showing">'+subitSVG(SUBIT_ORDER[r.showing])+'</div></div>';
+  }
+  SUBIT_ORDER.forEach(function(n,i){
+    var v=r.items[i], isS=(r.showing===i);
+    var showBtn=(v===null&&!isS)?'<button class="btn-sm btn-teal" onclick="showSubit('+i+')">R&#257;d&#299;t</button>':'';
+    var marks=isS?'<em style="font-size:12px;color:#1b5454">R&#257;da&hellip;</em>':mbtns(i,v);
+    html+='<div class="item-row">'+
+      '<span style="font-size:12px;color:#9a9186;min-width:42px">Uzd. '+(i+1)+'</span>'+
+      '<span style="font-size:12px;color:#5a5448;min-width:80px">Atbilde: <strong>'+n+'</strong></span>'+
+      '<span style="display:flex;gap:5px;align-items:center;flex-shrink:0">'+showBtn+marks+'</span>'+'</div>';
+  });
+  html+='<span class="score-inline">Pareizi: <strong>'+cc(r.items)+' / 6</strong></span>';
+  return html;
+}
+
+function buildCounting(t, r) {
+  var html='<span class="lbl">Punktu kopas</span>';
+  t.sets.forEach(function(n,i){
+    var v=r.items[i];
+    html+='<div class="item-row" style="align-items:flex-start;gap:10px">'+
+      '<div>'+
+        '<span style="font-size:12px;color:#9a9186;display:block;margin-bottom:3px">Uzd. '+(i+1)+' &mdash; atbilde: <strong>'+n+'</strong></span>'+
+        countBlockGrid(n)+
+      '</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">'+mbtns(i,v)+'</div>'+
+      '</div>';
+  });
+  html+='<span class="score-inline">Pareizi: <strong>'+cc(r.items)+' / 5</strong></span>';
+  return html;
+}
+
+function buildDigitId(t, r) {
+  var grid=t.digits.map(function(d,i){
+    var v=r.items[i];
+    return '<button class="dbtn'+(v===true?' correct':'')+'" onclick="toggleDigit('+i+')">'+d+'</button>';
+  }).join('');
+  return '<span class="lbl">Cipari: klik&#353;&#311;iniet pareizi nosauktos</span>'+
+    '<div class="digit-grid">'+grid+'</div>'+
+    '<span class="score-inline">Pareizi nosaukts: <strong>'+cc(r.items)+' / '+t.digits.length+'</strong></span>';
+}
+
+function buildArithmetic(t, r) {
+  var html='<span class="lbl">Mutiskie uzdevumi</span>';
+  t.problems.forEach(function(p,i){
+    var v=r.items[i];
+    html+='<div class="arith-item">'+
+      '<div class="arith-top">'+
+        '<span class="arith-q">'+(i+1)+'. '+p.q+'</span>'+
+        '<span class="arith-ans-tag">= '+p.ans+'</span>'+
+      '</div>'+
+      '<div class="arith-vis">'+dotsVis(p.vis)+'</div>'+
+      '<div class="arith-btns">'+mbtns(i,v)+'</div>'+
+      '</div>';
+  });
+  html+='<span class="score-inline">Pareizi: <strong>'+cc(r.items)+' / 5</strong></span>';
+  return html;
+}
+
+function buildPatterns(t, r) {
+  var html='<span class="lbl">Kr&#257;su sec&#299;bas</span>';
+  t.patterns.forEach(function(pat,i){
+    var v=r.items[i];
+    var seq='<div class="pat-seq">'+pat.seq.map(pb).join('')+pb('?')+'</div>';
+    var ansSwatch='<span style="display:inline-block;width:13px;height:13px;background:'+PHEX[pat.ans]+';border-radius:3px;vertical-align:middle;margin:0 3px"></span>';
+    html+='<div class="pat-item">'+
+      '<div class="pat-top">'+
+        '<span style="font-size:12px;color:#9a9186;min-width:42px">Uzd. '+(i+1)+'</span>'+
+        seq+
+      '</div>'+
+      '<div class="pat-btns">'+
+        '<span style="font-size:12px;color:#5a5448">Atbilde: '+ansSwatch+'<strong>'+PLV[pat.ans]+'</strong></span>'+
+        '&nbsp;&nbsp;'+mbtns(i,v)+
+      '</div>'+
+      '</div>';
+  });
+  html+='<span class="score-inline">Pareizi: <strong>'+cc(r.items)+' / 4</strong></span>';
+  return html;
+}
+
+function buildSpatial(t, r) {
+  var html='<span class="lbl">Telpiskie uzdevumi</span>';
+  t.items.forEach(function(item,i){
+    var v=r.items[i];
+    var vis=(item.vis&&item.vis!=='none')
+      ?'<div class="sp-vis">'+spatialSVG(item.vis)+'</div>':'';
+    html+='<div class="sp-item">'+
+      '<div class="sp-top"><p class="sp-q"><strong>'+(i+1)+'.</strong> '+item.q+'</p></div>'+
+      vis+
+      '<p class="sp-ans">Paredzamā atbilde: '+item.ans+'</p>'+
+      '<div class="sp-btns">'+mbtns(i,v)+'</div>'+
+      '</div>';
+  });
+  html+='<span class="score-inline">Pareizi: <strong>'+cc(r.items)+' / 5</strong></span>';
+  return html;
+}
+
+// ══ SCORING PANEL ══════════════════════════════════════════════════════
+function buildScoring(t, r) {
+  var rv=getEffectiveRubric(S.idx);
+  var opts=[
+    {val:2, lbl:'Sasniegts',        cls:'sg', rc:'#1b5e20', rk:'a'},
+    {val:1, lbl:'Daļēji sasniegts', cls:'sa', rc:'#7b4b00', rk:'p'},
+    {val:0, lbl:'Nav sasniegts',    cls:'sr', rc:'#8b1a1a', rk:'n'}
+  ];
+  var allMarked=(t.type==='digit_id'||t.type==='spatial')||r.items.every(function(v){return v!==null;});
+  if(allMarked && rv!==null) {
+    var aOpt=opts[2-rv];
+    var badge='<span class="auto-badge '+aOpt.cls+'" style="border-color:currentColor">Autom&#257;tiski: '+aOpt.lbl+'</span>'+
+      '<p style="font-size:12px;color:#9a9186;margin-bottom:9px">Var labot ar pog&#257;m zemāk.</p>';
+    var btns=opts.map(function(o){
+      var ac=(r.rubric!==null&&r.rubric===o.val)?' '+o.cls:'';
+      return '<button class="sbtn'+ac+'" onclick="setRubric('+o.val+')">'+(r.rubric!==null&&r.rubric===o.val?'\u270E ':'')+o.lbl+'</button>';
+    }).join('');
+    var rubs=opts.map(function(o){
+      var dim=rv===o.val?'':' dim';
+      return '<div class="rrow'+dim+'"><span class="rlbl" style="color:'+o.rc+'">'+o.lbl+':</span><span class="rtxt">'+t.rub[o.rk]+'</span></div>';
+    }).join('');
+    return badge+'<div class="sbtns">'+btns+'</div>'+rubs;
+  }
+  var btns=opts.map(function(o){
+    var ac=r.rubric===o.val?' '+o.cls:'';
+    return '<button class="sbtn'+ac+'" onclick="setRubric('+o.val+')">'+o.lbl+'</button>';
+  }).join('');
+  var riv=r.rubric!==null?r.rubric:-1;
+  var rubs=opts.map(function(o){
+    var dim=riv===o.val?'':' dim';
+    return '<div class="rrow'+dim+'"><span class="rlbl" style="color:'+o.rc+'">'+o.lbl+':</span><span class="rtxt">'+t.rub[o.rk]+'</span></div>';
+  }).join('');
+  return '<div class="sbtns">'+btns+'</div>'+rubs;
+}
+
+// ══ RENDER SCREENS ════════════════════════════════════════════════════
+
+function toggleTip(e, id) {
+  e.stopPropagation();
+  var all = document.querySelectorAll('.tooltip-box');
+  all.forEach(function(el){ if(el.id!==id) el.classList.remove('active'); });
+  document.getElementById(id).classList.toggle('active');
+}
+document.addEventListener('click', function(){ 
+  document.querySelectorAll('.tooltip-box').forEach(function(el){ el.classList.remove('active'); });
+});
+
+function renderWelcome() {
+  return '<div>'+
+    '<p class="eyebrow">Pirmsskolas izgl&#299;t&#299;bas monitorings &middot; Demo</p>'+
+    '<h1>R&#275;&#311;inprat&#299;bas nov&#275;rt&#275;&#353;ana</h1>'+
+    '<p class="sub">Demo versija. 6 gadus veci b&#275;rni. Izpildes laiks 15 l&#299;dz 20 min.</p>'+
+    '<div class="card">'+
+      '<span class="lbl">B&#275;rna pseidoanonimiz&#275;tais kods</span>'+
+      '<input id="codeIn" type="text" placeholder="piem&#275;ram, 2026-RIG-042" maxlength="20" onkeydown="if(event.key===\'Enter\')doStart()">'+
+      '<p class="hint">Personas dati netiek v&#257;kti. Kods kalpo datu sistematiz&#275;&#353;anai.</p>'+
+      '<p class="err" id="codeErr">L&#363;dzu, ievadiet vismaz 3 simbolus.</p>'+
+      '<button class="btn-main" onclick="doStart()">S&#257;kt nov&#275;rt&#275;&#353;anu</button>'+
+    '</div>'+
+    '<div class="tlist">'+
+      '<div class="tlist-hd">Uzdevumu p&#257;rskats (Jordan et al., 2009; Aunola et al., 2004; Jim&#233;nez Lira et al., 2017; Papic et al., 2011; Mix et al., 2016)</div>'+
+      TASKS.map(function(t){
+        var tid='tt'+t.n;
+        return '<div class="trow">'+
+          '<span class="tc">'+t.n+'.</span>'+
+          '<span class="tn-wrap">'+
+            '<span class="tn">'+t.title+'</span>'+
+            '<button class="info-btn" onclick="toggleTip(event,\''+tid+'\')" title="Par šo prasmi" aria-label="Par šo prasmi">i</button>'+
+            '<div class="tooltip-box" id="'+tid+'">'+t.desc+'</div>'+
+          '</span>'+
+          '<span class="tr-val">'+t.r+'</span>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+    '<p style="font-size:11px;color:#9a9186;margin-top:8px;margin-bottom:0;line-height:1.5">'+
+      '<em>r</em> &#8212; P&#299;rsona korel&#257;cija ar v&#275;l&#257;kiem skolas sasniegumiem (korel&#257;cijas p&#275;t&#299;jumi); '+
+      '<em>&#946;</em> &#8212; standartiz&#275;ts regresijas koeficients (longitud&#299;n&#257;li p&#275;t&#299;jumi). '+
+      'Rob&#275;&#382;v&#275;rt&#299;bas nav emp&#299;riski valid&#275;tas &#8212; darba hipot&#275;ze pirms pilota.'+
+    '</p>'+
+    '</div>';
+}
+
+function renderTask() {
+  var t=TASKS[S.idx], r=S.results[S.idx];
+  var pd=TASKS.map(function(_,i){
+    return '<div class="dot '+(i<S.idx?'done':i===S.idx?'cur':'pend')+'"></div>';
+  }).join('');
+  var content='';
+  if(t.type==='subitizing') content=buildSubitizing(t,r);
+  else if(t.type==='counting')   content=buildCounting(t,r);
+  else if(t.type==='digit_id')   content=buildDigitId(t,r);
+  else if(t.type==='arithmetic') content=buildArithmetic(t,r);
+  else if(t.type==='patterns')   content=buildPatterns(t,r);
+  else if(t.type==='spatial')    content=buildSpatial(t,r);
+  var instr=t.instr.map(function(ins,i){
+    return '<div class="irow"><span class="inum">'+(i+1)+'.</span><span class="itxt">'+ins+'</span></div>';
+  }).join('');
+  var canNext=isComplete(S.idx);
+  return '<div class="dots">'+pd+'</div>'+
+    '<div class="cols">'+
+      '<div><div class="card gray">'+
+        '<p class="eyebrow">'+t.n+'. uzdevums &middot; '+t.dom+' &middot; '+t.r+'</p>'+
+        '<h2>'+t.n+'. '+t.title+'</h2>'+
+        '<p style="font-size:11px;color:#9a9186;margin-bottom:10px">Avots: '+t.src+'</p>'+
+        '<span class="lbl">Instrukcijas pedagogam</span>'+instr+
+      '</div>'+
+      '<div class="card" style="margin-top:10px">'+
+        '<span class="lbl">'+t.dq+'</span>'+
+        '<p style="font-size:13px;color:#5a5448;line-height:1.6;margin-top:6px;margin-bottom:0">'+t.desc+'</p>'+
+      '</div></div>'+
+      '<div>'+
+        '<div class="card">'+content+'</div>'+
+        '<div class="card">'+
+          '<span class="lbl">V&#275;rt&#275;jums</span>'+buildScoring(t,r)+
+          '<span class="lbl" style="margin-top:10px">Pedagoga piez&#299;mes</span>'+
+          '<textarea id="noteArea" rows="2" placeholder="Neoblig&#257;ti&hellip;" onchange="saveNote(this.value)"></textarea>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="nav">'+
+      '<button onclick="doBack()" '+(S.idx===0?'disabled':'')+'>&#8592; Atpaka&#316;</button>'+
+      '<button class="btn-main btn-teal" style="max-width:200px;margin-top:0" onclick="doNext()" '+(canNext?'':'disabled')+'>'+
+        (S.idx===TASKS.length-1?'Pabeigt &#10003;':'T&#257;l&#257;k &#8594;')+
+      '</button>'+
+    '</div>';
+}
+
+function renderSummary() {
+  var total=0,sas=0;
+  TASKS.forEach(function(_,i){var v=getEffectiveRubric(i);if(v===null)v=0;total+=v;if(v===2)sas++;});
+  var maxPts=TASKS.length*2, pct=Math.round(total/maxPts*100);
+  var stats=[
+    {l:'V&#275;rt&#275;jums kop&#257;', v:total+' / '+maxPts},
+    {l:'Procentile',               v:pct+'%*'},
+    {l:'Sasniegts',        v:sas+' / '+TASKS.length}
+  ].map(function(m){return '<div class="stat"><p class="stat-l">'+m.l+'</p><p class="stat-v">'+m.v+'</p></div>';}).join('');
+  var bmap={2:['bg','Sasniegts'],1:['ba','Da&#316;&#275;ji sasniegts'],0:['br','Nav sasniegts']};
+  var rows=TASKS.map(function(t,i){
+    var rv=getEffectiveRubric(i);if(rv===null)rv=0;
+    var b='<span class="badge '+bmap[rv][0]+'">'+bmap[rv][1]+'</span>';
+    var c=cc(S.results[i].items),tot=S.results[i].items.length;
+    var note=S.results[i].note?'<p style="font-size:12px;color:#5a5448">'+S.results[i].note+'</p>':'';
+    return '<div class="rresult"><span class="rnum">'+t.n+'.</span>'+
+      '<div><p class="rname">'+t.title+'</p>'+note+'</div>'+
+      '<div style="text-align:right"><span style="font-size:12px;color:#9a9186">'+c+' / '+tot+'</span> '+b+'</div></div>';
+  }).join('');
+  var dl=(new Date()).toLocaleDateString('lv-LV');
+  return '<p style="font-size:11px;color:#9a9186;margin-bottom:5px">'+S.code+' &middot; '+dl+'</p>'+
+    '<h1 style="color:#1a1814;margin-bottom:3px">Nov&#275;rt&#275;&#353;anas rezultāti</h1>'+
+    '<p class="sub">R&#275;&#311;inprat&#299;ba &middot; 5&ndash;7 gadus veci bērni</p>'+
+    '<div class="stat-grid">'+stats+'</div>'+
+    '<div class="rtable">'+rows+'</div>'+
+    '<p style="font-size:11px;color:#9a9186;margin-bottom:1rem">* Procentile attēlo neapstrādāto punktu procentuālo daļu no maksimālā. Normatīvie dati vēl nav pieejami.</p>'+
+    (S.saved
+      ? '<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:#e8f5e9;border:1px solid #81c784;border-radius:7px;margin-bottom:10px;font-size:14px;color:#1b5e20;font-weight:500">&#10003; Rezultāti saglabāti ('+S.code+' &middot; '+dl+')</div>'
+      : '<button class="btn-main" style="max-width:260px;margin-bottom:10px" onclick="mockSave()">Saglab&#257;t rezult&#257;tus</button>'
+    )+
+    '<br><button style="margin-top:8px" onclick="doReset()">Jauna nov&#275;rt&#275;&#353;ana</button>';
+}
+
+function render() {
+  var el=g('app');
+  if(S.phase==='welcome'){el.innerHTML=renderWelcome();return;}
+  if(S.phase==='summary'){el.innerHTML=renderSummary();return;}
+  el.innerHTML=renderTask();
+  var ta=g('noteArea');
+  if(ta) ta.value=S.results[S.idx].note||'';
+}
+
+// ══ ACTIONS ═══════════════════════════════════════════════════════════
+function doStart() {
+  var inp=g('codeIn'), val=inp?inp.value.trim():'';
+  if(val.length<3){var e=g('codeErr');if(e)e.style.display='block';return;}
+  S.code=val;S.idx=0;S.results=initResults();S.phase='task';S.saved=false;render();
+}
+function doBack() { if(S.idx>0){S.idx--;render();} }
+function doNext() {
+  if(!isComplete(S.idx)) return;
+  if(S.idx<TASKS.length-1){S.idx++;render();}
+  else{S.phase='summary';render();}
+}
+function doReset() { S.phase='welcome';S.saved=false;render(); }
+function mockSave() { S.saved=true;render(); }
+
+function setItem(i,val) { S.results[S.idx].items[i]=val; render(); }
+
+function toggleDigit(i) {
+  var r=S.results[S.idx];
+  r.items[i]=r.items[i]===true?null:true;
+  render();
+}
+
+function showSubit(i) {
+  clearTimeout(subitTimer);
+  S.results[S.idx].showing=i;
+  render();
+  subitTimer=setTimeout(function(){
+    if(S.results[S.idx]) S.results[S.idx].showing=-1;
+    render();
+  }, 2000);
+}
+
+function setRubric(val) { S.results[S.idx].rubric=val; render(); }
+function saveNote(v) { S.results[S.idx].note=v; }
+
+render();
+</script>
+</body>
+</html>
