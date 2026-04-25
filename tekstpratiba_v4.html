@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tekstpratības novērtēšana – Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;background:#f5f1eb;color:#1a1814}
+#app{max-width:860px;margin:0 auto;padding:1.25rem}
+
+/* ── CARDS & LAYOUT ── */
+.card{background:#fff;border:1px solid #d9d3c8;border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:11px}
+.card.gray{background:#eee9e2}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+@media(max-width:600px){.cols{grid-template-columns:1fr}}
+
+/* ── TYPOGRAPHY ── */
+h1{font-size:22px;font-weight:600;color:#1b5454;margin-bottom:4px}
+h2{font-size:17px;font-weight:500;margin-bottom:12px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9a9186;margin-bottom:3px}
+.lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9a9186;display:block;margin-bottom:8px}
+.sub{font-size:14px;color:#5a5448;margin-bottom:1rem}
+.hint{font-size:12px;color:#9a9186;margin-top:4px}
+.err{font-size:12px;color:#b71c1c;margin-top:5px;display:none}
+.warn{font-size:12px;color:#7b4b00;background:#fff8e1;border:1px solid #ffb300;border-radius:5px;padding:6px 10px;margin-bottom:8px}
+
+/* ── FORM ELEMENTS ── */
+input[type=text]{width:100%;padding:9px 11px;border:1px solid #d9d3c8;border-radius:6px;font-family:inherit;font-size:14px;background:#f5f1eb;color:#1a1814;outline:none}
+input[type=text]:focus{border-color:#1b5454}
+textarea{width:100%;padding:8px 10px;border:1px solid #d9d3c8;border-radius:6px;font-family:inherit;font-size:13px;background:#f5f1eb;color:#1a1814;resize:vertical;outline:none;margin-top:5px}
+textarea:focus{border-color:#1b5454}
+
+/* ── BUTTONS ── */
+button{font-family:inherit;cursor:pointer;font-size:14px;border-radius:6px;border:1px solid #d9d3c8;padding:8px 14px;background:#fff;color:#5a5448;transition:all .12s}
+button:hover{background:#eee9e2}
+button:disabled{opacity:.3;cursor:not-allowed}
+.btn-main{display:block;width:100%;padding:11px;background:#1b5454;color:#fff;border:none;font-weight:500;margin-top:12px;font-size:15px}
+.btn-main:hover{background:#1f6666}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-teal{background:#1b5454;color:#fff;border-color:#1b5454}
+.btn-teal:hover{background:#1f6666}
+.btn-red{background:#ffebee;color:#8b1a1a;border-color:#ef9a9a}
+.btn-red:hover{background:#ffcdd2}
+
+/* ── PROGRESS ── */
+.dots{display:flex;gap:5px;align-items:center;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.dot{height:7px;border-radius:4px;transition:all .2s;background:#d9d3c8}
+.dot.done{background:#4caf50;width:8px}
+.dot.cur{background:#1b5454;width:20px}
+.dot.pend{width:8px}
+
+/* ── TASK LIST ── */
+.tlist{border:1px solid #d9d3c8;border-radius:10px;overflow:hidden;margin-top:1.25rem}
+.tlist-hd{padding:8px 13px;background:#eee9e2;border-bottom:1px solid #d9d3c8;font-size:12px;font-weight:600;color:#5a5448}
+.trow{display:flex;gap:10px;padding:8px 13px;border-bottom:1px solid #d9d3c8;align-items:center}
+.trow:last-child{border-bottom:none}
+.tc{font-size:11px;color:#9a9186;min-width:30px}
+.tn{font-size:13px;color:#5a5448;flex:1}
+.tr-val{font-size:11px;color:#9a9186}
+
+/* ── INSTRUCTION LIST ── */
+.irow{display:flex;gap:8px;margin-bottom:7px}
+.inum{font-size:11px;color:#9a9186;min-width:17px;padding-top:2px}
+.itxt{font-size:13px;line-height:1.55}
+
+/* ── LETTER GRID (task 1) ── */
+.letter-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.lbtn{width:48px;height:52px;border-radius:7px;border:1.5px solid #d9d3c8;background:#f5f1eb;font-size:22px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.lbtn:hover{border-color:#c4bdb0}
+.lbtn.correct{background:#e8f5e9;border-color:#81c784;color:#1b5e20}
+.lbtn.wrong{background:#f5f5f5;border-color:#e0e0e0;color:#bbb}
+.score-inline{font-size:14px;font-weight:500;color:#1b5454;margin-bottom:8px}
+
+/* ── PHONEME WORDS (task 2) ── */
+.phword-row{margin-bottom:8px;border:1px solid #d9d3c8;border-radius:7px;overflow:hidden}
+.phword-top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eee9e2}
+.phword-txt{font-size:18px;font-weight:500;flex:1}
+.phword-btn{padding:4px 10px;font-size:12px}
+.phword-breakdown{font-size:15px;letter-spacing:.12em;font-weight:600;color:#1b5454;padding:6px 14px;background:#e4efef;display:none}
+.phword-row.open .phword-breakdown{display:block}
+.item-score-btns{display:flex;gap:6px;margin-top:0}
+
+/* ── RAN GRID ── */
+.ran-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.ran-cell{height:52px;border-radius:7px;border:1px solid #d9d3c8;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#1a1814}
+.ran-cell.obj{font-size:28px}
+.ran-timer-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.timer-display{font-size:28px;font-weight:600;color:#1b5454;min-width:80px;font-variant-numeric:tabular-nums}
+.error-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.error-count{font-size:22px;font-weight:600;color:#8b1a1a;min-width:36px}
+.ran-result-box{background:#f5f1eb;border-radius:7px;padding:10px 14px;margin-bottom:12px;font-size:14px;line-height:1.7}
+.ran-norm{font-size:12px;color:#9a9186;margin-top:4px}
+
+/* ── PRINT QUESTIONS (task 5) ── */
+.qrow{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0ece4}
+.qrow:last-child{border-bottom:none}
+.qtxt{flex:1;font-size:13px;line-height:1.5;padding-top:4px}
+
+/* ── NONWORDS (task 6) ── */
+.nw-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid #d9d3c8;border-radius:7px;margin-bottom:7px}
+.nw-word{font-size:20px;font-weight:500;flex:1}
+.nw-syl{font-size:11px;color:#9a9186}
+
+/* ── STORY (task 7) ── */
+.story-text{font-size:14px;line-height:1.85;font-style:italic;border-left:2.5px solid #c4bdb0;padding-left:12px;margin-bottom:12px;color:#1a1814}
+.q-item{margin-bottom:6px}
+.q-item summary{font-size:13px;cursor:pointer;padding:3px 0;list-style:none;user-select:none}
+.q-item summary::-webkit-details-marker{display:none}
+.q-item summary::before{content:"▸ ";font-size:10px;color:#9a9186}
+details[open] .q-item summary::before{content:"▾ "}
+.q-ans{font-size:12px;color:#1b5e20;margin:3px 0 0 15px;font-weight:500}
+
+/* ── SCORING ── */
+.sbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.sbtn{padding:9px 5px;border-radius:6px;border:1px solid #d9d3c8;background:#fff;color:#5a5448;font-family:inherit;font-size:13px;cursor:pointer;transition:all .12s;line-height:1.3}
+.sbtn:hover{border-color:#c4bdb0}
+.sbtn.sg{background:#e8f5e9;color:#1b5e20;border:1.5px solid #81c784;font-weight:600}
+.sbtn.sa{background:#fff8e1;color:#7b4b00;border:1.5px solid #ffb300;font-weight:600}
+.sbtn.sr{background:#ffebee;color:#8b1a1a;border:1.5px solid #ef9a9a;font-weight:600}
+.rrow{display:flex;gap:8px;margin-bottom:4px}
+.rrow.dim{opacity:.62}
+.rlbl{font-size:12px;font-weight:500;min-width:110px;flex-shrink:0}
+.rtxt{font-size:12px;color:#5a5448;line-height:1.4}
+.auto-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid;margin-bottom:10px}
+
+/* ── NAV ── */
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+
+/* ── SUMMARY ── */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:#eee9e2;border-radius:8px;padding:12px 15px}
+.stat-l{font-size:12px;color:#5a5448;margin-bottom:3px}
+.stat-v{font-size:24px;font-weight:500}
+.rtable{background:#fff;border:1px solid #d9d3c8;border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+.rresult{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:9px 14px;border-bottom:1px solid #d9d3c8;align-items:start}
+.rresult:last-child{border-bottom:none}
+.rnum{font-size:11px;color:#9a9186;padding-top:2px}
+.rname{font-size:13px;font-weight:500;margin-bottom:2px}
+.rscore{font-size:12px;color:#5a5448}
+.badge{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;border:1px solid;white-space:nowrap}
+.bg{background:#e8f5e9;color:#1b5e20;border-color:#81c784}
+.ba{background:#fff8e1;color:#7b4b00;border-color:#ffb300}
+.br{background:#ffebee;color:#8b1a1a;border-color:#ef9a9a}
+.bn{color:#9a9186;border-color:transparent;background:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+
+// ══ FIXED GRIDS ══════════════════════════════════════════════════════════
+var RAN_BC = [
+  ['A','3','M','1','O'],
+  ['1','O','A','3','M'],
+  ['M','1','O','A','3'],
+  ['O','A','3','M','1'],
+  ['3','M','1','O','A']
+];
+var RAN_OBJ = [
+  ['🐕','🌲','🍎','🏠','🐱'],
+  ['🏠','🐱','🐕','🌲','🍎'],
+  ['🍎','🏠','🌲','🐱','🐕'],
+  ['🌲','🐕','🐱','🍎','🏠'],
+  ['🐱','🍎','🏠','🐕','🌲']
+];
+var OBJ_NAMES = {'🐕':'suns','🌲':'koks','🍎':'ābols','🏠':'māja','🐱':'kaķis'};
+
+// ══ TASK DATA ════════════════════════════════════════════════════════════
+var TASKS = [
+  { n:1, title:'Alfabēta zināšanas', dom:'Valodas struktūra', nelp:'.50', type:'letters',
+    instr:[
+      'Parādiet bērnam ekrānā redzamos burtus.',
+      'Sakiet: "Nosauc katru burtu, ko redzi! Sāc šeit."',
+      'Rādiet uz burtiem pa vienam. Ja bērns nevar nosaukt, turpiniet ar nākamo burtu.',
+      'Atzīmējiet pareizi nosauktos burtus – klikšķiniet uz katra pareizā.'
+    ],
+    letters:['O','A','M','I','L','E','S','T','U','N','Ā','K','Č','Ļ','Ž'],
+    diac:['Ā','Č','Ļ','Ž'],
+    rub:{a:'Nosauc ≥12 no 15 burtiem, tostarp vismaz 2 diakritiskos (Ā, Č, Ļ vai Ž)',
+         p:'Nosauc 7–11 burtus pareizi',
+         n:'Nosauc ≤6 burtus pareizi'}
+  },
+  { n:2, title:'Fonoloģiskā apziņa', dom:'Valodas struktūra', nelp:'.44', type:'phonemes',
+    instr:[
+      'Sakiet: "Spēlēsim tādu spēli! Es teikšu vārdu un tu nosauc visas vārda skaņas, vienu pēc otras. Piemēram, ja es teiktu \'ola\', tev būtu jāsaka \'O – L – A\'."',
+      'Demonstrācija: "ola" → o–l–a (3 skaņas). Praktiskais vārds: "bite" → b–i–t–e.',
+      'Tagad testu uzdevuma vārdi. Klikšķiniet uz vārda, lai fiksētu pareizo sadalījumu.',
+      'Atzīmējiet, cik vārdus bērns sadala pareizi.'
+    ],
+    words:[
+      {w:'māja', b:'m – ā – j – a', n:4},
+      {w:'upe',  b:'u – p – e',     n:3},
+      {w:'zeme', b:'z – e – m – e', n:4},
+      {w:'laiva',b:'l – ai – v – a',n:4},
+      {w:'skola',b:'s – k – o – l – a',n:5}
+    ],
+    rub:{a:'Sadala 4–5 vārdus skaņās pareizi; sasaista skaņu ar burtu',
+         p:'Sadala 2–3 vārdus vai pieļauj sistemātiskas zilbu/skaņu kļūdas',
+         n:'Sadala ≤1 vārdu; nosauc zilbes vai atkārto vārdu nesadalītu'}
+  },
+  { n:3, title:'Ātrā automatizētā nosaukšana: burti un cipari', dom:'Apstrādes ātrums un automatizācija', nelp:'.38', type:'ran_bc',
+    instr:[
+      'Sakiet: "Šeit uz ekrāna ir burti un cipari. Nosauc tos pēc iespējas ātrāk, no kreisās uz labo, no augšas uz leju!"',
+      'Parādiet bērnam 5×5 tabulu. Norādiet uz sākuma simbolu augšējā kreisajā stūrī.',
+      'Spiediet "Sākt" tieši pirms bērns sāk nosaukt. Spiediet "Pabeigt", kad bērns nosauc pēdējo elementu.',
+      'Pēc laika fiksēšanas atzīmējiet kļūdu skaitu ar + pogu.'
+    ],
+    norm:'Aptuveni: <45 sek. labi; 45–70 sek. vidēji; >70 sek. lēni',
+    rub:{a:'Pabeidz <50 sek. ar ≤2 kļūdām',
+         p:'50–75 sek. vai >2 kļūdas, bet pabeidz uzdevumu',
+         n:'Nespēj pabeigt, pieļauj >5 kļūdas vai laiks >75 sek.'}
+  },
+  { n:4, title:'Ātrā automatizētā nosaukšana: objekti', dom:'Apstrādes ātrums un automatizācija', nelp:'.30', type:'ran_obj',
+    instr:[
+      'Sakiet: "Šeit ir attēli. Nosauc katru attēlā redzamo lietu pēc iespējas ātrāk, no kreisās uz labo, no augšas uz leju!"',
+      'Pārliecinieties, ka bērns zina visu 5 objektu nosaukumus (parādiet kā iepazīšanās kārtu pirms mērīšanas).',
+      'Spiediet "Sākt" tieši pirms bērns sāk nosaukt. Spiediet "Pabeigt", kad pabeidz.',
+      'Pēc laika fiksēšanas atzīmējiet kļūdu skaitu ar + pogu.'
+    ],
+    fam:'Objekti tiks attēloti kā vienkāršas zīmējumu ikonas. Ja bērns izmanto sinonīmu (piemēram, "suns" vietā "suņuks"), atbildi skaitīt par pareizu.',
+    famInstr:'Pirms taimera: parādiet katru attēlu atsevišķi un pārbaudiet, vai bērns zina nosaukumu. Ja nezina, iemāciet.',
+    norm:'Aptuveni: <40 sek. labi; 40–65 sek. vidēji; >65 sek. lēni',
+    rub:{a:'Pabeidz <45 sek. ar ≤2 kļūdām',
+         p:'45–70 sek. vai >2 kļūdas, bet pabeidz uzdevumu',
+         n:'Nespēj pabeigt, pieļauj >5 kļūdas vai laiks >70 sek.'}
+  },
+  { n:5, title:'Drukas izpratne', dom:'Valodas struktūra', nelp:'.43', type:'print',
+    instr:[
+      'Sagatavojiet vienkāršu grāmatu vai drukātu tekstu ar ilustrācijām (2–3 teikumi, liels fonts).',
+      'Sakiet: "Man ir grāmata. Palīdzi man to lasīt!" Iedodiet grāmatu bērnam.',
+      'Uzdodiet katru jautājumu pa vienam, norādiet uz grāmatu, bet nepalīdziet ar atbildi.',
+      'Atzīmējiet katru pareizo atbildi.'
+    ],
+    qs:[
+      '"Kur sākas lasīšana, šeit vai šeit?" (norādiet uz kreiso un labo malu)',
+      '"Kur ir rakstīts teksts un kur ir attēls?"',
+      '"Parādi man vienu vārdu!"',
+      '"Parādi man vienu burtu!"',
+      '"Parādi man lielo burtu un mazo burtu!"'
+    ],
+    rub:{a:'Atbild pareizi uz 4–5 jautājumiem',
+         p:'Atbild pareizi uz 2–3 jautājumiem',
+         n:'Atbild pareizi uz ≤1 jautājumu'}
+  },
+  { n:6, title:'Fonoloģiskā atmiņa: nevārdu atkārtošana', dom:'Valodas struktūra', nelp:'.28', type:'nonwords',
+    instr:[
+      'Sakiet: "Tagad teikšu izdomātus vārdus, kādu valodā nav. Atkārto katru vārdu tieši tā, kā dzirdi!"',
+      'Demonstrācija: "blipa" – bērns atkārto. "gorpuse" – bērns atkārto.',
+      'Izrunājiet nevārdus skaidri un vienmērīgā tempā. Katru teikt tikai vienu reizi, neatkārtojiet.',
+      'Atzīmējiet, vai bērns atkārtoja katru nevārdu pareizi.'
+    ],
+    words:[
+      {w:'blipa',   syl:'2 zilbes'},
+      {w:'dostu',   syl:'2 zilbes'},
+      {w:'belīta',  syl:'3 zilbes'},
+      {w:'gorpuse', syl:'3 zilbes'},
+      {w:'piteloma',syl:'4 zilbes'},
+      {w:'vūsabeni',syl:'4 zilbes'}
+    ],
+    crit:'Pieļaujamas nelielas intonācijas atšķirības; fonoloģiskās kļūdas (nepareizi fonēmi vai zilbes) skaitīt par kļūdu.',
+    rub:{a:'Pareizi atkārto 5–6 nevārdus',
+         p:'Pareizi atkārto 3–4 nevārdus',
+         n:'Pareizi atkārto ≤2 nevārdus'}
+  },
+  { n:7, title:'Mutiskā valoda: klausīšanās izpratne un izteikšanās', dom:'Saziņa kontekstā', nelp:'.48', type:'story',
+    instr:[
+      'Sakiet: "Es tev izlasīšu īsu stāstu. Klausies uzmanīgi, jo pēc tam uzdošu jautājumus!"',
+      'Nolasiet tekstu skaidri, mierīgā tempā, bez komentāriem.',
+      'Pēc noklausīšanās uzdodiet jautājumus pa vienam. Klikšķiniet uz jautājuma, lai redzētu paredzamo atbildi.',
+      'Ekspresīvās valodas novērtēšanai: parādiet attēlu un lūdziet bērnu pastāstīt, kas tajā redzams.'
+    ],
+    text:'Mazā Annas māsa tikko sāka staigāt. Vakar viņa pirmo reizi izgāja ārā pagalmā. Tur viņa ieraudzīja kaķi un ļoti priecājās. Anna turēja māsu aiz rokas, lai viņa nenokrīt.',
+    qs:[
+      {q:'Par ko bija šis stāsts?',        a:'Par Annu un viņas māsu (vai: par mazuli, kas sāka staigāt)'},
+      {q:'Kur māsa izgāja pirmo reizi?',   a:'Ārā / pagalmā'},
+      {q:'Ko māsa ieraudzīja pagalmā?',    a:'Kaķi'},
+      {q:'Kāpēc Anna turēja māsu aiz rokas?', a:'Lai māsa nenokrīt / lai palīdzētu'}
+    ],
+    img:'Attēls: bērni rudens parkā met lapas gaisā. (Alternatīva bez attēla: "Pastāsti par savu iecienītāko spēli!")',
+    rub:{a:'Atbild uz 3–4 jautājumiem; ekspresīvajā daļā lieto 3+ saistītus teikumus',
+         p:'Atbild uz 1–2 jautājumiem; ekspresīvajā daļā 1–2 teikumi vai atsevišķi vārdi',
+         n:'Neatbild vai atbildes nesaistītas ar tekstu; ekspresīvajā daļā tikai atsevišķi vārdi'}
+  },
+  { n:8, title:'Rakstīšanas pamati', dom:'Valodas struktūra', nelp:'.35', type:'writing',
+    instr:[
+      'Sagatavojiet bērnam papīru un zīmuli.',
+      'Sakiet: "Uzraksti šos burtus uz papīra. Ievēro katra burta formu!"',
+      'Parādiet burtus uz ekrāna. Bērns raksta uz papīra.',
+      'Novērojiet: vai raksta patstāvīgi? Vai ievēro formu un rakstīšanas virzienu (no kreisās uz labo)?'
+    ],
+    letters:['A','M','O','S','E','Ā','L','T'],
+    note:'Burti atlasīti ar dažādiem grafomotoriskajiem elementiem: taisnes (A, M, S, E, L, T), loks (O), diakritiskā zīme (Ā).',
+    extra:'"Mēģini uzrakstīt vārdu BITE (vai MĀJA) tā, kā tu domā, kā to raksta."',
+    rub:{a:'Raksta 6–8 burtus patstāvīgi ar atpazīstamu formu un pareizu virzienu; mēģina izdomāt pareizrakstību',
+         p:'Raksta 3–5 burtus; forma daļēji atpazīstama vai virziens nestabils',
+         n:'Raksta ≤2 burtus ar atpazīstamu formu vai atsakās rakstīt'}
+  }
+];
+
+// ══ STATE ════════════════════════════════════════════════════════════════
+var S = { phase:'welcome', code:'', idx:0, results:[], saved:false };
+var ranTimer = null;
+
+function initResults() {
+  return TASKS.map(function(t) {
+    if (t.type==='letters')  return {items:Array(t.letters.length).fill(null), rubric:null, note:''};
+    if (t.type==='phonemes') return {items:Array(t.words.length).fill(null), open:Array(t.words.length).fill(false), rubric:null, note:''};
+    if (t.type==='ran_bc')   return {phase:'grid', elapsed:0, startTime:0, errors:0, rubric:null, note:''};
+    if (t.type==='ran_obj')  return {phase:'fam',  elapsed:0, startTime:0, errors:0, rubric:null, note:''};
+    if (t.type==='print')    return {items:Array(t.qs.length).fill(null), rubric:null, note:''};
+    if (t.type==='nonwords') return {items:Array(t.words.length).fill(null), rubric:null, note:''};
+    return {rubric:null, note:''};
+  });
+}
+
+// ══ AUTO-SCORE ════════════════════════════════════════════════════════
+function countCorrect(items) {
+  return items.filter(function(v){return v===true;}).length;
+}
+function autoRubric(score, hi, lo) {
+  if (score >= hi) return 2;
+  if (score >= lo) return 1;
+  return 0;
+}
+function getEffectiveRubric(i) {
+  var t = TASKS[i], r = S.results[i];
+  if (t.type==='letters')  return autoRubric(countCorrect(r.items), 12, 7);
+  if (t.type==='phonemes') return autoRubric(countCorrect(r.items), 4, 2);
+  if (t.type==='print')    return autoRubric(countCorrect(r.items), 4, 2);
+  if (t.type==='nonwords') return autoRubric(countCorrect(r.items), 5, 3);
+  if (t.type==='ran_bc') {
+    if (r.rubric !== null) return r.rubric;
+    if (r.phase !== 'done') return null;
+    if (r.elapsed < 50 && r.errors <= 2) return 2;
+    if (r.elapsed <= 75 && r.errors <= 5) return 1;
+    return 0;
+  }
+  if (t.type==='ran_obj') {
+    if (r.rubric !== null) return r.rubric;
+    if (r.phase !== 'done') return null;
+    if (r.elapsed < 45 && r.errors <= 2) return 2;
+    if (r.elapsed <= 70 && r.errors <= 5) return 1;
+    return 0;
+  }
+  return r.rubric;
+}
+function isComplete(i) {
+  var t = TASKS[i], r = S.results[i];
+  if (t.type==='letters'||t.type==='phonemes'||t.type==='print'||t.type==='nonwords') return true;
+  if (t.type==='ran_bc'||t.type==='ran_obj') return r.phase === 'done';
+  return r.rubric !== null;
+}
+
+// ══ UTILS ════════════════════════════════════════════════════════════
+function g(id){return document.getElementById(id);}
+function fmt(sec){return sec.toFixed(1)+' sek.';}
+
+// ══ RENDER ═══════════════════════════════════════════════════════════
+function render() {
+  clearInterval(ranTimer);
+  var app = g('app');
+  if (S.phase==='welcome') app.innerHTML = renderWelcome();
+  else if (S.phase==='task') app.innerHTML = renderTask();
+  else app.innerHTML = renderSummary();
+}
+
+// ── WELCOME ──────────────────────────────────────────────────────────
+function renderWelcome() {
+  var rows = TASKS.map(function(t) {
+    return '<div class="trow"><span class="tc">'+t.n+'.</span><span class="tn">'+t.title+'</span><span class="tr-val">r = '+t.nelp+'</span></div>';
+  }).join('');
+  return '<p style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a9186;margin-bottom:.4rem">Pirmsskolas izglītības monitorings · Demo</p>'+
+    '<h1>Tekstpratības novērtēšana</h1>'+
+    '<p class="sub">Demo versija. 6 gadus veci bērni. Izpildes laiks 20 līdz 25 min.</p>'+
+    '<div class="card">'+
+    '<span class="lbl">Bērna pseidoanonimizētais kods</span>'+
+    '<input type="text" id="codeIn" placeholder="piemēram, 2026-RIG-042" autocomplete="off">'+
+    '<p class="hint">Personas dati netiek vākti. Kods kalpo datu sistematizēšanai.</p>'+
+    '<p class="err" id="codeErr">Ievadiet vismaz 3 rakstu zīmes!</p>'+
+    '<button class="btn-main" onclick="doStart()">Sākt novērtēšanu</button>'+
+    '</div>'+
+    '<div class="tlist"><div class="tlist-hd">Uzdevumu pārskats (pēc NELP prognozētājspējas)</div>'+rows+'</div>';
+}
+
+// ── TASK ─────────────────────────────────────────────────────────────
+function renderTask() {
+  var t = TASKS[S.idx], r = S.results[S.idx];
+  var dots = TASKS.map(function(_,i) {
+    var c = i<S.idx?'done':i===S.idx?'cur':'pend';
+    return '<div class="dot '+c+'"></div>';
+  }).join('');
+  var instr = t.instr.map(function(txt,i) {
+    return '<div class="irow"><span class="inum">'+(i+1)+'.</span><span class="itxt">'+txt+'</span></div>';
+  }).join('');
+  var canNext = isComplete(S.idx);
+  var nextLbl = S.idx < TASKS.length-1 ? 'Nākamais uzdevums' : 'Pabeigt un apskatīt rezultātus';
+  var backDis = S.idx===0 ? ' disabled' : '';
+  var nextDis = !canNext ? ' disabled' : '';
+  var notComplete = !canNext ? '<p class="warn">Izvēlieties vērtējumu, lai turpinātu.</p>' : '';
+
+  return '<div class="dots">'+dots+'</div>'+
+    '<p class="eyebrow">'+t.n+'. uzdevums · '+t.dom+' · NELP r = '+t.nelp+'</p>'+
+    '<h2>'+t.title+'</h2>'+
+    '<div class="cols">'+
+    '<div class="card gray"><span class="lbl">Pedagoga instrukcija</span>'+instr+'</div>'+
+    '<div class="card">'+buildStim(t, r)+'</div>'+
+    '</div>'+
+    '<div class="card"><span class="lbl">Vērtēšana</span>'+buildScoring(t, r)+'<label style="font-size:12px;color:#9a9186;display:block;margin-top:9px;margin-bottom:4px">Piezīmes (nav obligāti)</label><textarea rows="2" placeholder="Brīvs teksts..." oninput="saveNote(this.value)">'+r.note+'</textarea></div>'+
+    notComplete+
+    '<div class="nav"><button'+backDis+' onclick="doBack()">← Atpakaļ</button>'+
+    '<button class="btn-main" style="width:auto;display:inline-block"'+nextDis+' onclick="doNext()">'+nextLbl+'</button></div>';
+}
+
+// ── STIM builders ─────────────────────────────────────────────────────
+function buildStim(t, r) {
+  if (t.type==='letters')  return buildLetters(t, r);
+  if (t.type==='phonemes') return buildPhonemes(t, r);
+  if (t.type==='ran_bc')   return buildRanBC(r);
+  if (t.type==='ran_obj')  return buildRanObj(t, r);
+  if (t.type==='print')    return buildPrint(t, r);
+  if (t.type==='nonwords') return buildNonwords(t, r);
+  if (t.type==='story')    return buildStory(t);
+  if (t.type==='writing')  return buildWriting(t);
+  return '';
+}
+
+function buildLetters(t, r) {
+  var correct = countCorrect(r.items);
+  var btns = t.letters.map(function(l, i) {
+    var state = r.items[i]===true ? 'correct' : r.items[i]===false ? 'wrong' : '';
+    return '<button class="lbtn '+state+'" onclick="toggleLetter('+i+')">'+l+'</button>';
+  }).join('');
+  return '<span class="lbl">Burti (klikšķis = pareizs; vēlreiz = nav nosaukts)</span>'+
+    '<div class="letter-grid">'+btns+'</div>'+
+    '<p class="score-inline">Pareizi nosaukti: <strong>'+correct+' / '+t.letters.length+'</strong></p>';
+}
+
+function buildPhonemes(t, r) {
+  var correct = countCorrect(r.items);
+  var rows = t.words.map(function(wd, i) {
+    var openCls = r.open[i] ? ' open' : '';
+    var ic = r.items[i];
+    var cbtn = ic===true  ? '<button class="btn-sm sg" onclick="setItem('+i+',false)">✓ Pareizi</button>'
+             : ic===false ? '<button class="btn-sm sr" onclick="setItem('+i+',null)">✗ Nepareizi</button>'
+             : '<button class="btn-sm" onclick="setItem('+i+',true)">Pareizi</button>&nbsp;<button class="btn-sm" onclick="setItem('+i+',false)">Nepareizi</button>';
+    return '<div class="phword-row'+openCls+'">'+
+      '<div class="phword-top">'+
+      '<span class="phword-txt">'+wd.w+'</span>'+
+      '<span style="font-size:11px;color:#9a9186;margin-right:8px">'+wd.n+' skaņas</span>'+
+      '<button class="btn-sm" onclick="togglePhOpen('+i+')">'+( r.open[i]?'Aizvērt':'Sadalījums')+'</button>'+
+      '</div>'+
+      '<div class="phword-breakdown">'+wd.b+'</div>'+
+      '<div style="padding:6px 12px;background:#f9f7f4;display:flex;gap:6px;align-items:center">'+cbtn+'</div>'+
+      '</div>';
+  }).join('');
+  return '<span class="lbl">Testuzdevuma vārdi</span>'+rows+
+    '<p class="score-inline" style="margin-top:8px">Pareizi: <strong>'+correct+' / '+t.words.length+'</strong></p>';
+}
+
+function buildRanBC(r) {
+  var grid = RAN_BC.map(function(row) {
+    return row.map(function(c){return '<div class="ran-cell">'+c+'</div>';}).join('');
+  }).join('');
+  var gridHtml = '<div class="ran-grid">'+grid+'</div>';
+
+  if (r.phase==='grid') {
+    return '<span class="lbl">Stimulu tabula</span>'+gridHtml+
+      '<button class="btn-main btn-teal" style="margin-top:4px" onclick="startRan()">Sākt ▶</button>';
+  }
+  if (r.phase==='running') {
+    startRanInterval();
+    return '<span class="lbl">Stimulu tabula — mērīšana notiek</span>'+gridHtml+
+      '<div class="ran-timer-row">'+
+      '<span style="font-size:13px;color:#5a5448">Laiks:</span>'+
+      '<span class="timer-display" id="ranTimer">0.0</span>'+
+      '<button class="btn-main btn-red" style="width:auto;display:inline-block;margin:0" onclick="stopRan()">Pabeigt ■</button>'+
+      '</div>';
+  }
+  // done
+  return '<span class="lbl">Rezultāts</span>'+
+    '<div class="ran-result-box">'+
+    '<strong>Laiks: '+fmt(r.elapsed)+'</strong> &nbsp;·&nbsp; Kļūdas: '+r.errors+
+    '<br><span class="ran-norm">'+TASKS[S.idx].norm+'</span>'+
+    '</div>'+
+    '<div class="error-row">'+
+    '<span style="font-size:13px;color:#5a5448">Kļūdas:</span>'+
+    '<span class="error-count">'+r.errors+'</span>'+
+    '<button class="btn-sm" onclick="addError()">+ Kļūda</button>'+
+    '<button class="btn-sm" onclick="removeError()">− Kļūda</button>'+
+    '</div>';
+}
+
+function buildRanObj(t, r) {
+  if (r.phase==='fam') {
+    var uniq = [['🐕','suns'],['🏠','māja'],['🍎','ābols'],['🐱','kaķis'],['🌲','koks']];
+    var famCards = uniq.map(function(pair) {
+      return '<div style="text-align:center;flex:1;min-width:64px">'+
+        '<div style="font-size:42px;line-height:1.2">'+pair[0]+'</div>'+
+        '<div style="font-size:13px;font-weight:500;color:#1a1814;margin-top:3px">'+pair[1]+'</div>'+
+        '</div>';
+    }).join('');
+    return '<span class="lbl">Iepazīšanās kārta — 5 unikālie objekti</span>'+
+      '<p style="font-size:13px;color:#5a5448;margin-bottom:10px">'+t.famInstr+'</p>'+
+      '<div style="display:flex;gap:8px;padding:14px 10px;border:1px solid #d9d3c8;border-radius:8px;margin-bottom:12px;background:#f9f7f4">'+famCards+'</div>'+
+      '<p style="font-size:12px;color:#9a9186;margin-bottom:10px">'+t.fam+'</p>'+
+      '<button class="btn-main btn-teal" onclick="famDone()">Iepazīšanās pabeigta — sākt testu</button>';
+  }
+  var grid = RAN_OBJ.map(function(row) {
+    return row.map(function(c){return '<div class="ran-cell obj" title="'+OBJ_NAMES[c]+'">'+c+'</div>';}).join('');
+  }).join('');
+  var gridHtml = '<div class="ran-grid">'+grid+'</div>';
+
+  if (r.phase==='grid') {
+    return '<span class="lbl">Stimulu tabula</span>'+gridHtml+
+      '<button class="btn-main btn-teal" style="margin-top:4px" onclick="startRan()">Sākt ▶</button>';
+  }
+  if (r.phase==='running') {
+    startRanInterval();
+    return '<span class="lbl">Stimulu tabula — mērīšana notiek</span>'+gridHtml+
+      '<div class="ran-timer-row">'+
+      '<span style="font-size:13px;color:#5a5448">Laiks:</span>'+
+      '<span class="timer-display" id="ranTimer">0.0</span>'+
+      '<button class="btn-main btn-red" style="width:auto;display:inline-block;margin:0" onclick="stopRan()">Pabeigt ■</button>'+
+      '</div>';
+  }
+  return '<span class="lbl">Rezultāts</span>'+
+    '<div class="ran-result-box">'+
+    '<strong>Laiks: '+fmt(r.elapsed)+'</strong> &nbsp;·&nbsp; Kļūdas: '+r.errors+
+    '<br><span class="ran-norm">'+t.norm+'</span>'+
+    '</div>'+
+    '<div class="error-row">'+
+    '<span style="font-size:13px;color:#5a5448">Kļūdas:</span>'+
+    '<span class="error-count">'+r.errors+'</span>'+
+    '<button class="btn-sm" onclick="addError()">+ Kļūda</button>'+
+    '<button class="btn-sm" onclick="removeError()">− Kļūda</button>'+
+    '</div>';
+}
+
+function buildPrint(t, r) {
+  var correct = countCorrect(r.items);
+  var qs = t.qs.map(function(q, i) {
+    var ic = r.items[i];
+    var cbtn = ic===true  ? '<button class="btn-sm sg" onclick="setItem('+i+',null)">✓ Pareizi</button>'
+             : ic===false ? '<button class="btn-sm sr" onclick="setItem('+i+',true)">✗ Nepareizi</button>'
+             : '<button class="btn-sm" onclick="setItem('+i+',true)">Pareizi</button>&nbsp;<button class="btn-sm" onclick="setItem('+i+',false)">Nepareizi</button>';
+    return '<div class="qrow"><div class="qtxt">'+(i+1)+'. '+q+'</div>'+cbtn+'</div>';
+  }).join('');
+  return '<span class="lbl">Jautājumi</span>'+qs+
+    '<p class="score-inline" style="margin-top:8px">Pareizi: <strong>'+correct+' / '+t.qs.length+'</strong></p>';
+}
+
+function buildNonwords(t, r) {
+  var correct = countCorrect(r.items);
+  var rows = t.words.map(function(wd, i) {
+    var ic = r.items[i];
+    var cbtn = ic===true  ? '<button class="btn-sm sg" onclick="setItem('+i+',null)">✓ Pareizi</button>'
+             : ic===false ? '<button class="btn-sm sr" onclick="setItem('+i+',true)">✗ Nepareizi</button>'
+             : '<button class="btn-sm" onclick="setItem('+i+',true)">Pareizi</button>&nbsp;<button class="btn-sm" onclick="setItem('+i+',false)">Nepareizi</button>';
+    return '<div class="nw-row">'+
+      '<div><span class="nw-word">'+wd.w+'</span><br><span class="nw-syl">'+wd.syl+'</span></div>'+
+      cbtn+'</div>';
+  }).join('');
+  return '<span class="lbl">Nevārdi</span>'+rows+
+    '<p style="font-size:12px;color:#9a9186;margin-top:9px">'+t.crit+'</p>'+
+    '<p class="score-inline" style="margin-top:8px">Pareizi: <strong>'+correct+' / '+t.words.length+'</strong></p>';
+}
+
+function buildStory(t) {
+  var qs = t.qs.map(function(qa, i) {
+    return '<li class="q-item"><details><summary>'+(i+1)+'. '+qa.q+'</summary>'+
+      '<p class="q-ans">Paredzamā atbilde: '+qa.a+'</p></details></li>';
+  }).join('');
+  return '<span class="lbl">Teksts (lasa pedagogs)</span>'+
+    '<p class="story-text">'+t.text+'</p>'+
+    '<span class="lbl">Jautājumi</span>'+
+    '<ul style="list-style:none;margin-bottom:10px">'+qs+'</ul>'+
+    '<div style="background:#f5f1eb;border-radius:7px;padding:9px 12px">'+
+    '<p style="font-size:11px;color:#9a9186;margin-bottom:3px">Ekspresīvās valodas daļa:</p>'+
+    '<p style="font-size:13px;color:#5a5448">'+t.img+'</p></div>';
+}
+
+function buildWriting(t) {
+  var cards = t.letters.map(function(l) {
+    return '<div style="width:52px;height:62px;border:1px solid #c4bdb0;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;background:#fff">'+l+'</div>';
+  }).join('');
+  return '<span class="lbl">Burti bērnam</span>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+cards+'</div>'+
+    '<div style="background:#f5f1eb;border-radius:7px;padding:9px 12px;margin-bottom:8px">'+
+    '<p style="font-size:11px;color:#9a9186;margin-bottom:2px">Papildu uzdevums</p>'+
+    '<p style="font-size:13px;color:#5a5448">'+t.extra+'</p></div>'+
+    '<p style="font-size:12px;color:#9a9186">'+t.note+'</p>';
+}
+
+// ── SCORING panel ─────────────────────────────────────────────────────
+function buildScoring(t, r) {
+  var isAuto = (t.type==='letters'||t.type==='phonemes'||t.type==='print'||t.type==='nonwords'||
+                ((t.type==='ran_bc'||t.type==='ran_obj') && r.phase==='done'));
+
+  // RAN not yet finished
+  if ((t.type==='ran_bc'||t.type==='ran_obj') && r.phase!=='done') {
+    return '<p style="font-size:13px;color:#9a9186;padding:6px 0">Vērtēšana tiks aprēķināta automātiski pēc laika mērīšanas pabeigšanas.</p>';
+  }
+
+  var rubricVal = isAuto ? getEffectiveRubric(S.idx) : r.rubric;
+
+  var opts = [
+    {val:2, lbl:'Sasniegts',      cls:'sg', rc:'#1b5e20', rk:'a'},
+    {val:1, lbl:'Daļēji sasniegts',cls:'sa', rc:'#7b4b00', rk:'p'},
+    {val:0, lbl:'Nav sasniegts',  cls:'sr', rc:'#8b1a1a', rk:'n'}
+  ];
+
+  if (isAuto) {
+    var opt = opts[2 - rubricVal];
+    var autoMsg = (t.type==='ran_bc'||t.type==='ran_obj')
+      ? 'Automātiski (laiks: '+fmt(r.elapsed)+', kļūdas: '+r.errors+'): '+opt.lbl
+      : 'Automātiski: '+opt.lbl;
+    var badge = '<span class="auto-badge '+opt.cls+'" style="border-color:currentColor">'+autoMsg+'</span>'+
+      '<p style="font-size:12px;color:#9a9186;margin-bottom:10px">Pamatojoties uz atzīmētajiem atbildes elementiem. Varat labot ar pogām zemāk.</p>';
+    var btns = opts.map(function(o) {
+      var ac = r.rubric!==null && r.rubric===o.val ? ' '+o.cls : '';
+      return '<button class="sbtn'+ac+'" onclick="setRubric('+o.val+')">'+(r.rubric!==null&&r.rubric===o.val?'✎ ':'')+o.lbl+'</button>';
+    }).join('');
+    var rubs = opts.map(function(o) {
+      var lit = rubricVal===o.val ? '' : ' dim';
+      return '<div class="rrow'+lit+'"><span class="rlbl" style="color:'+o.rc+'">'+o.lbl+':</span><span class="rtxt">'+t.rub[o.rk]+'</span></div>';
+    }).join('');
+    return badge+'<div class="sbtns">'+btns+'</div>'+rubs;
+  }
+
+  // manual rubric
+  var btns = opts.map(function(o) {
+    var ac = r.rubric===o.val ? ' '+o.cls : '';
+    return '<button class="sbtn'+ac+'" onclick="setRubric('+o.val+')">'+o.lbl+'</button>';
+  }).join('');
+  var rv = r.rubric !== null ? rubricVal : -1;
+  var rubs = opts.map(function(o) {
+    var lit = rv===o.val ? '' : ' dim';
+    return '<div class="rrow'+lit+'"><span class="rlbl" style="color:'+o.rc+'">'+o.lbl+':</span><span class="rtxt">'+t.rub[o.rk]+'</span></div>';
+  }).join('');
+  return '<div class="sbtns">'+btns+'</div>'+rubs;
+}
+
+// ── SUMMARY ──────────────────────────────────────────────────────────
+function renderSummary() {
+  var total = 0, sas = 0;
+  TASKS.forEach(function(_,i) {
+    var v = getEffectiveRubric(i);
+    if (v===null) v=0;
+    total += v;
+    if (v===2) sas++;
+  });
+  var maxPts = TASKS.length * 2;
+  var pct = Math.round(total/maxPts*100);
+  var stats = [
+    {l:'Vērtējums kopā', v:total+' / '+maxPts},
+    {l:'Procentile', v:pct+'%*'},
+    {l:'Pilnībā sasniegts', v:sas+' / '+TASKS.length}
+  ].map(function(m) {
+    return '<div class="stat"><p class="stat-l">'+m.l+'</p><p class="stat-v">'+m.v+'</p></div>';
+  }).join('');
+
+  var bmap = {2:['bg','Sasniegts'], 1:['ba','Daļēji sasniegts'], 0:['br','Nav sasniegts']};
+  var rows = TASKS.map(function(t,i) {
+    var rv = getEffectiveRubric(i);
+    if (rv===null) rv=0;
+    var b = '<span class="badge '+bmap[rv][0]+'">'+bmap[rv][1]+'</span>';
+    var score = '';
+    var r = S.results[i];
+    if (t.type==='letters'||t.type==='phonemes'||t.type==='print'||t.type==='nonwords') {
+      var max = t.type==='letters'?t.letters.length : t.type==='phonemes'?t.words.length : t.type==='print'?t.qs.length : t.words.length;
+      score = '<span style="font-size:12px;color:#9a9186">'+countCorrect(r.items)+' / '+max+'</span> ';
+    } else if ((t.type==='ran_bc'||t.type==='ran_obj') && r.elapsed>0) {
+      score = '<span style="font-size:12px;color:#9a9186">'+fmt(r.elapsed)+' / '+r.errors+' kļūd.</span> ';
+    }
+    var note = r.note ? '<p style="font-size:12px;color:#5a5448">'+r.note+'</p>' : '';
+    return '<div class="rresult">'+
+      '<span class="rnum">'+t.n+'.</span>'+
+      '<div><p class="rname">'+t.title+'</p>'+note+'</div>'+
+      '<div style="text-align:right">'+score+b+'</div>'+
+      '</div>';
+  }).join('');
+
+  return '<p style="font-size:11px;color:#9a9186;margin-bottom:5px">'+S.code+' · '+(new Date().toLocaleDateString('lv-LV'))+'</p>'+
+    '<h1 style="color:#1a1814;margin-bottom:3px">Novērtēšanas rezultāti</h1>'+
+    '<p class="sub">Tekstpratība. 6 gadus veci bērni.</p>'+
+    '<div class="stat-grid">'+stats+'</div>'+
+    '<div class="rtable">'+rows+'</div>'+
+    '<p style="font-size:11px;color:#9a9186;margin-bottom:1rem">* Procentile šobrīd attēlo neapstrādāto punktu procentuālo daļu no maksimālā. Normatīvie dati vēl nav pieejami.</p>'+
+    (S.saved
+      ? '<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:#e8f5e9;border:1px solid #81c784;border-radius:7px;margin-bottom:10px;font-size:14px;color:#1b5e20;font-weight:500">✓ Rezultāti saglabāti ('+S.code+' · '+(new Date().toLocaleDateString('lv-LV'))+')</div>'
+      : '<button class="btn-main" style="max-width:260px;margin-bottom:10px" onclick="mockSave()">Saglabāt rezultātus</button>'
+    )+
+    '<br><button style="margin-top:6px" onclick="doReset()">Jauna novērtēšana</button>';
+}
+
+// ══ ACTIONS ══════════════════════════════════════════════════════════
+function mockSave() { S.saved = true; render(); }
+
+function doStart() {
+  var inp = g('codeIn');
+  var val = inp ? inp.value.trim() : '';
+  if (val.length < 3) { var e=g('codeErr'); if(e) e.style.display='block'; return; }
+  S.code = val; S.idx = 0; S.results = initResults(); S.phase = 'task'; S.saved = false;
+  render();
+}
+
+function doBack() {
+  if (S.idx > 0) { clearInterval(ranTimer); S.idx--; render(); }
+}
+
+function doNext() {
+  if (!isComplete(S.idx)) return;
+  clearInterval(ranTimer);
+  if (S.idx < TASKS.length-1) { S.idx++; render(); }
+  else { S.phase = 'summary'; render(); }
+}
+
+function toggleLetter(i) {
+  var r = S.results[S.idx];
+  r.items[i] = r.items[i]===true ? null : true;
+  render();
+}
+
+function togglePhOpen(i) {
+  S.results[S.idx].open[i] = !S.results[S.idx].open[i];
+  render();
+}
+
+function setItem(i, val) {
+  S.results[S.idx].items[i] = val;
+  render();
+}
+
+function setRubric(val) {
+  S.results[S.idx].rubric = val;
+  render();
+}
+
+function saveNote(v) { S.results[S.idx].note = v; }
+
+function startRan() {
+  var r = S.results[S.idx];
+  r.phase = 'running';
+  r.startTime = Date.now();
+  r.elapsed = 0;
+  render();
+}
+
+function startRanInterval() {
+  clearInterval(ranTimer);
+  ranTimer = setInterval(function() {
+    var el = g('ranTimer');
+    if (!el) { clearInterval(ranTimer); return; }
+    var r = S.results[S.idx];
+    el.textContent = ((Date.now()-r.startTime)/1000).toFixed(1);
+  }, 100);
+}
+
+function stopRan() {
+  clearInterval(ranTimer);
+  var r = S.results[S.idx];
+  r.elapsed = (Date.now()-r.startTime)/1000;
+  r.phase = 'done';
+  render();
+}
+
+function addError()    { S.results[S.idx].errors++; render(); }
+function removeError() { if(S.results[S.idx].errors>0){S.results[S.idx].errors--;} render(); }
+
+function famDone() {
+  S.results[S.idx].phase = 'grid';
+  render();
+}
+
+function doReset() { S.phase='welcome'; S.saved=false; render(); }
+
+render();
+</script>
+</body>
+</html>
